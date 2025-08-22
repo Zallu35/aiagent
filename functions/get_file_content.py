@@ -1,6 +1,6 @@
 import os
 import functions.config
-
+from google.genai import types
 
 def get_file_content(working_directory, file_path):
     joined_path= os.path.join(working_directory, file_path)
@@ -19,3 +19,18 @@ def get_file_content(working_directory, file_path):
             return file_content_string
     except Exception as e:
         return f"Error: {e}"
+
+schema_get_file_content = types.FunctionDeclaration(
+    name="get_file_content",
+    description="Reads the contents of a given file found withing the given working directory.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="The relative path to the file to be read.",
+            ),
+        },
+        required=["file_path"],
+    ),
+)
