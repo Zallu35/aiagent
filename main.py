@@ -7,6 +7,7 @@ from functions.get_files_info import schema_get_files_info
 from functions.get_file_content import schema_get_file_content
 from functions.write_file import schema_write_file
 from functions.run_python import schema_run_python_file
+from functions.call_function import call_function
 
 load_dotenv()
 api_key = os.environ.get("GEMINI_API_KEY")
@@ -50,8 +51,12 @@ def main():
 
     if reply.function_calls:
         for func in reply.function_calls:
-            print(f"Calling function: {func.name}({func.args})")
-            print(func)
+            #print(f"Calling function: {func.name}({func.args})")
+            function_output=call_function(func, verbose="--verbose" in args)
+            if not function_output.parts[0].function_response.response:
+                raise RuntimeError("Missing response from function call!")
+            if "--verbose" in args:
+                print(f"-> {function_output.parts[0].function_response.response}")
     else:
         print(reply.text)
 
