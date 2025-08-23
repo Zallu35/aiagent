@@ -9,17 +9,19 @@ class Calculator:
             "/": lambda a, b: a / b,
         }
         self.precedence = {
-            "+": 1,
-            "-": 1,
-            "*": 2,
-            "/": 2,
+            "+": 3,
+            "-": 3,
+            "*": 4,
+            "/": 4,
         }
 
     def evaluate(self, expression):
         if not expression or expression.isspace():
             return None
         tokens = expression.strip().split()
-        return self._evaluate_infix(tokens)
+        result = self._evaluate_infix(tokens)  # Store the result
+        print(result)  # Print the result
+        return result
 
     def _evaluate_infix(self, tokens):
         values = []
@@ -38,7 +40,7 @@ class Calculator:
                 try:
                     values.append(float(token))
                 except ValueError:
-                    raise ValueError(f"invalid token: {token}")
+                    raise ValueError("invalid token: {}".format(token))
 
         while operators:
             self._apply_operator(operators, values)
@@ -54,8 +56,15 @@ class Calculator:
 
         operator = operators.pop()
         if len(values) < 2:
-            raise ValueError(f"not enough operands for operator {operator}")
+            raise ValueError("not enough operands for operator {}".format(operator))
 
         b = values.pop()
         a = values.pop()
         values.append(self.operators[operator](a, b))
+
+if __name__ == '__main__':
+    import sys
+    if len(sys.argv) > 1:
+        expression = sys.argv[1]
+        calculator = Calculator()
+        calculator.evaluate(expression)

@@ -43,22 +43,39 @@ def main():
         raise Exception("No prompt provided")
         sys.exit(1)
 
-    reply = client.models.generate_content(
-        model='gemini-2.0-flash-001', 
-        contents=messages,
-        config=types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt),
-    )
+    x=20
+    while x>0:
+        reply = client.models.generate_content(
+            model='gemini-2.0-flash-001', 
+            contents=messages,
+            config=types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt),
+        )
+        for candidate in reply.candidates:
+            messages.append(candidate.content)
 
-    if reply.function_calls:
-        for func in reply.function_calls:
-            #print(f"Calling function: {func.name}({func.args})")
-            function_output=call_function(func, verbose="--verbose" in args)
-            if not function_output.parts[0].function_response.response:
-                raise RuntimeError("Missing response from function call!")
-            if "--verbose" in args:
-                print(f"-> {function_output.parts[0].function_response.response}")
-    else:
-        print(reply.text)
+        #print(f"reply.text exists: {bool(reply.text)}")
+        #print(f"reply.function_calls exists: {bool(reply.function_calls)}")
+        #if reply.function_calls:
+            #print(f"Number of function calls: {len(reply.function_calls)}")
+
+        
+
+        if reply.function_calls:
+            function_responses = []
+            for func in reply.function_calls:
+                #print(f"Calling function: {func.name}({func.args})")
+                function_output=call_function(func, verbose="--verbose" in args)
+                if not function_output.parts[0].function_response.response:
+                    raise RuntimeError("Missing response from function call!")
+                if "--verbose" in args:
+                    print(f"-> {function_output.parts[0].function_response.response}")
+                function_responses.append(function_output.parts[0])
+            messages.append(types.Content(role="user", parts=function_responses))
+        elif reply.text:
+            print(reply.text)
+            break
+        x-=1
+    
 
     prompt_tokens = reply.usage_metadata.prompt_token_count
     response_tokens = reply.usage_metadata.candidates_token_count
